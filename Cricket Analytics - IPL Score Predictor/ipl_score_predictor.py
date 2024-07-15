@@ -1,3 +1,6 @@
+# How to run this file
+# Open cmd and use the command streamlite run ipl_score_predictor.py
+
 #import the libraries
 import math
 import numpy as np
