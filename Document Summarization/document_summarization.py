@@ -11,11 +11,15 @@ from transformers import pipeline
 import streamlit as st
 
 def extract_text_from_pdf(uploaded_file):
-    reader = PyPDF2.PdfReader(io.BytesIO(uploaded_file.read()))
-    text = ""
-    for page in reader.pages:
-        text += page.extract_text() or "" 
-    return text
+    try:
+        reader = PyPDF2.PdfReader(io.BytesIO(uploaded_file.read()))
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text() or "" 
+        return " ".join(text.split()[:1024])
+    except PdfReadError:
+        return "Error: Could not read PDF file."
+    
 
 def extract_text_from_docx(docx_path):
     doc = Document(docx_path)
@@ -37,8 +41,17 @@ print(summary[0]['summary_text'])
 def summarize_document(doc_text):
     # Clean text
     cleaned_text = clean_text(doc_text)
+    
+    # Ensure input text is not empty
+    if not cleaned_text.strip():
+        return "Error: No valid text extracted for summarization."
+    
+    # Truncate text if too long (1024 tokens limit)
+    max_input_length = 1024  # BART limit
+    truncated_text = " ".join(cleaned_text.split()[:max_input_length])
+
     # Summarize
-    summary = summarizer(cleaned_text, max_length=150, min_length=50, do_sample=False)
+    summary = summarizer(truncated_text, max_length=150, min_length=50, do_sample=False)
     return summary[0]['summary_text']
 
 # Title of the app
